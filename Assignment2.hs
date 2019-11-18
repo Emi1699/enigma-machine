@@ -9,18 +9,10 @@ module Assignment2 where
     type Reflector = [(Char, Char)]
     type Offsets = (Int, Int, Int)
 
-    type LeftRotor = Rotor
-    type MiddleRotor = Rotor
-    type RightRotor = Rotor
+    data Enigma = SimpleEnigma Rotor Rotor Rotor Reflector Offsets
 
-    data Enigma = SimpleEnigma LeftRotor MiddleRotor RightRotor Reflector Offsets
+    my_enigma = SimpleEnigma rotor1 rotor2 rotor3 reflectorB (0, 0, 0) -- instance of Enigma
 
-    my_enigma = SimpleEnigma rotor3 rotor2 rotor1 reflectorB (25, 25, 25) -- instance of Enigma
-
-
-    -- lr -> left rotor
-    -- mr -> middle rotor
-    -- rr -> right rotor
     enigmaEncode :: Char -> Enigma -> Char
     enigmaEncode c (SimpleEnigma lr mr rr reflector (ol, om, or)) = reverseEncode c6 rr
      where (olNew, omNew, orNew) = advanceRotors (ol, om, or)
@@ -31,6 +23,11 @@ module Assignment2 where
            c5 = (reverseEncode c4 lr)
            c6 = (reverseEncode c5 mr)
 
+    enigmaEncodeMessage :: String -> Enigma -> String
+    enigmaEncodeMessage [] _ = []
+    enigmaEncodeMessage (x:xs) (SimpleEnigma lr mr rr reflector (ol, om, or)) = 
+     enigmaEncode x (SimpleEnigma lr mr rr reflector (ol, om, or)) : enigmaEncodeMessage xs (SimpleEnigma lr mr rr reflector (olNew, omNew, orNew))
+     where (olNew, omNew, orNew) = advanceRotors (ol, om, or)
 
     -- encodes 1 character based on one rotor's configuration and its corresponding offset
     -- this method basically captures the functionality of one single rotor
@@ -40,10 +37,11 @@ module Assignment2 where
             (alphaPos (currentAlphabetChr cipher)) `mod` 26 = chr ((((alphaPos (head cipher)) - offset) `mod` 26) + 65)
      | otherwise = encode character (tail cipher) offset
 
+    -- does the opposite of encode 
     reverseEncode :: Char -> Rotor -> Char
-    reverseEncode character cipher 
-     | character == head cipher = currentAlphabetChr cipher
-     | otherwise = reverseEncode character (tail cipher)
+    reverseEncode c (x:xs) 
+     | c == x = currentAlphabetChr (x:xs)
+     | otherwise = reverseEncode c xs
 
     -- performs a letter-swap, given a character and a reflector
     reflect :: Char -> Reflector -> Char
@@ -51,7 +49,6 @@ module Assignment2 where
      | c == x = y
      | c == y = x
      | otherwise = reflect c z
-
 
     -- advances offsets accordingly after 1 character is encoded
     -- there might be a better way to write this, but it works for now
