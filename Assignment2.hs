@@ -1,6 +1,8 @@
--- !!!IMPORTANT!!!
+{-- !!!IMPORTANT!!!
 -- it is assumed that inputs for all the functions will be supplied correctly (i.e. Int as Int, Char as Char, etc., and all UPPERCASE)
--- !!!
+--       !!!
+-- AUTHOR: BULIGA FANEL EMANUEL
+--}
 module Assignment2 where
     import AssignmentHelp
     import Data.Char
@@ -26,33 +28,32 @@ module Assignment2 where
     -- SimpleEnigma function
     enigmaEncode c (SimpleEnigma lr mr rr reflector (ol, om, or)) = reverseEncode c6 rr orNew
      where (olNew, omNew, orNew) = advanceRotors (ol, om, or)
-           --
+           -- go through the rotors, from right to left
            c1 = (encode c rr orNew)
            c2 = (encode c1 mr omNew)
            c3 = (encode c2 lr olNew)
-           --
+           -- swap letter according to the reflector's wiring
            c4 = (reflect c3 reflector)
-           --
+           -- go through the rotors, from left to right
            c5 = (reverseEncode c4 lr olNew)
            c6 = (reverseEncode c5 mr omNew)
 
     -- SteckeredEnigma function
+    -- it is assumed that a steckerboard can have up to 10 pairs of letters, with 6 letters remaining unpaired
     enigmaEncode c (SteckeredEnigma lr mr rr reflector (ol, om, or) steckerboard) = reflect c8 steckerboard
      where (olNew, omNew, orNew) = advanceRotors (ol, om, or)
-           -- perform the letter swap
+           -- swap letter according to the steckerboard's wiring
            c1 = reflect c steckerboard
-           -- s
+           -- right -> left
            c2 = encode c1 rr orNew
            c3 = encode c2 mr omNew
            c4 = encode c3 lr olNew
-           --
+           -- swap
            c5 = reflect c4 reflector
-           --
+           -- left -> right
            c6 = reverseEncode c5 lr olNew
            c7 = reverseEncode c6 mr omNew
            c8 = reverseEncode c7 rr orNew
-
-
 
     -- given a message and an Enigma, returns the encoded message
     enigmaEncodeMessage :: String -> Enigma -> String
@@ -68,11 +69,13 @@ module Assignment2 where
           enigmaEncode y (SteckeredEnigma lr mr rr reflector (ol, om, or) steckerboard) : 
                     enigmaEncodeMessage ys (SteckeredEnigma lr mr rr reflector (olNew, omNew, orNew) steckerboard)
           where (olNew, omNew, orNew) = advanceRotors (ol, om, or)
+    -- both of these methods have been tested with the message posted on Blackboard
 
-    -- to be implemented
+    -- given a crib, returns the longest menu
+    -- there might be multiple menus of same length, but this function only returns one of them
     longestMenu :: Crib -> Menu
-    longestMenu c = []
-
+    longestMenu crib = foldr (\f x -> if length f > length x then f else x) [] (getAllMenus crib)
+    -- tested on the crib given as example in the assignment file
 
     -- encodes 1 character based on one rotor's configuration and its corresponding offset
     -- this method encapsulates the functionality of each rotor
@@ -83,7 +86,6 @@ module Assignment2 where
      where pca = alphaPos (currentAlphabetChr (x:xs))
            ph = alphaPos x
            pc = alphaPos c
-
 
     -- after going through the reflector, the signal must go back through the rotors
     -- this is equivalent to encoding the letter backwards
@@ -115,29 +117,25 @@ module Assignment2 where
        else (ol, om + 1, 0)
       else (ol, om, or + 1)
 
-    -- --given an index and an IndexList, returns all menus starting at that index
-    -- findMenusAt :: Index -> IndexList -> [Menu]
-    -- findMenusAt i (x:xs)
-    --  | frst x == frst (scnd x) = getMenusAt (frst x) (x:xs)
-    --  | otherwise = findMenusAt i xs
-
-    -- getMenusAt :: Index -> IndexList -> Crib -> [Menu]
-    -- getMenusAt i (x:xs) (plain, cipher)
-    --  | ((scnd (scnd x)) `elem` plain) = [buildMenusAt x idxlist | x <- filter (\f -> f /= i) (frst (x:xs)), idxlist <- filter (\f -> f /= i) (x:xs)]
-     -- | otherwise = [[i]]
-
+    -- returns all menus at a given index
     getMenusAt :: Index -> Crib -> IndexList -> [Menu]
-    getMenusAt i (plain, encoded) il
-     | notElem (getEncCharAt i il) plain = [[i]]
+    getMenusAt i crib il
+     | notElem (getEncCharAt i il) (fst crib) = [[i]]
      | otherwise = addXToEach i menus
       where newIndexList = deleteIndex i il
-            possibleMoves = getPossibleMoves i (plain, encoded)
-            menus = buildMenusAt possibleMoves (plain, encoded) newIndexList 
+            possibleMoves = getPossibleMoves i crib
+            menus = buildMenusAt possibleMoves crib newIndexList 
 
-
+    -- this is where different menus from an index are concatenated into a single list
     buildMenusAt :: Indexes -> Crib -> IndexList -> [Menu]
     buildMenusAt [] _ _ = [[]]
-    buildMenusAt (x:xs) crib il = (getMenusAt x crib il) ++ buildMenusAt xs crib il
+    buildMenusAt (x:xs) crib il = (getMenusAt x crib il) ++ (buildMenusAt xs crib il)
+
+    -- given a crib, returns all possible menus
+    getAllMenus :: Crib -> [Menu]
+    getAllMenus crib = [menus | x <- [0..k], menus <- getMenusAt x crib il]
+     where il = makeIndexList crib
+           k = length (fst crib)
 
     --return a list of tuples containing all the letters in the specified crib and their corresponding positions in that crib (starting at 0)
     makeIndexList :: Crib -> IndexList
@@ -156,23 +154,23 @@ module Assignment2 where
      where k = length (fst crib)
            il = makeIndexList crib
 
+    -- given an index i and an IndexList, returns the character at position i in a crib's encoded message
     getEncCharAt :: Index -> IndexList -> Char
     getEncCharAt _ [] = '\00'
     getEncCharAt i (x:xs)
      | i == fst x = snd (snd x)
      | otherwise = getEncCharAt i xs
 
+    -- given an index i and an IndexList, returns the character at position i in a crib's plain message
     getPlainCharAt :: Index -> IndexList -> Char
     getPlainCharAt _ [] = '\00'
     getPlainCharAt i (x:xs)
      | i == fst x = fst (snd x)
      | otherwise = getPlainCharAt i xs
 
+    -- deletes the entry at the specified index from an IndexList
     deleteIndex :: Index -> IndexList -> IndexList
     deleteIndex i il = [x | x <- il, fst x /= i]
-
- 
-
 
     -- returs the letter of the alphabet that corresponds to the currently visited character of a cipher
     -- for example if our cipher is rotor1's configuration, this function returns 'C' when given all the characters in the cipher starting at 'M'
@@ -180,7 +178,7 @@ module Assignment2 where
     currentAlphabetChr :: Cipher -> Char
     currentAlphabetChr cipher = chr (91 - length cipher)
 
-    -- testing purposes
+    -- testing purposes --
     steckerboard = [('B','Y'),
                     ('A','R'),
                     ('D','U'),
