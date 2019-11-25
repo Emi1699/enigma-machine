@@ -1,8 +1,10 @@
 {-- !!!IMPORTANT!!!
 -- it is assumed that inputs for all the functions will be supplied correctly (i.e. Int as Int, Char as Char, etc., and all UPPERCASE)
---       !!!
+--
+--
 -- AUTHOR: BULIGA FANEL EMANUEL
 --}
+
 module Assignment2 where
     import AssignmentHelp
     import Data.Char
@@ -194,7 +196,7 @@ module Assignment2 where
                     -- ('M','Z'),
                     -- ('T','W')]
 
-    steckerboard2 = [(' ', ' ')]
+    steckerboard2 = [('A', 'B')]
     myList = [a | a <- [1, 2, 3, 4], a `elem` [1, 7, 8, 2]]
     myCrib = ("WETTERVORHERSAGEBISKAYA", "RWIVTYRESXBFOGKUHQBAISE")
     myIndexList = makeIndexList myCrib
