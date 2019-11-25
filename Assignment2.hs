@@ -126,17 +126,29 @@ module Assignment2 where
     --  | ((scnd (scnd x)) `elem` plain) = [buildMenusAt x idxlist | x <- filter (\f -> f /= i) (frst (x:xs)), idxlist <- filter (\f -> f /= i) (x:xs)]
      -- | otherwise = [[i]]
 
+    getMenusAt :: Index -> Crib -> IndexList -> [Menu]
+    getMenusAt i (plain, encoded) il
+     | notElem (getEncCharAt i il) plain = [[i]]
+     | otherwise = addXToEach i menus
+      where newIndexList = deleteIndex i il
+            possibleMoves = getPossibleMoves i (plain, encoded)
+            menus = buildMenusAt possibleMoves (plain, encoded) newIndexList 
+
+
+    buildMenusAt :: Indexes -> Crib -> IndexList -> [Menu]
+    buildMenusAt [] _ _ = [[]]
+    buildMenusAt (x:xs) crib il = (getMenusAt x crib il) ++ buildMenusAt xs crib il
+
     --return a list of tuples containing all the letters in the specified crib and their corresponding positions in that crib (starting at 0)
     makeIndexList :: Crib -> IndexList
     makeIndexList (plain, encoded) = zip [0..k] (zip plain encoded)
      where k = length plain
 
+    -- adds inputed integer at the start of each given menu
+    -- this function creates the 'links' between indexes in a menu
     addXToEach :: Int -> [Menu] -> [Menu]
     addXToEach _ [] = []
-    addXToEach i (x:xs) = (addElementToList i x):(addXToEach i xs)
-
-    addElementToList :: a -> [a] -> [a]
-    addElementToList e l = e:l
+    addXToEach i (x:xs) = (i:x) : (addXToEach i xs)
 
     -- given an index i and a crib, returns all possible links between i and other indexes
     getPossibleMoves :: Index -> Crib -> Indexes
@@ -155,6 +167,10 @@ module Assignment2 where
     getPlainCharAt i (x:xs)
      | i == fst x = fst (snd x)
      | otherwise = getPlainCharAt i xs
+
+    deleteIndex :: Index -> IndexList -> IndexList
+    deleteIndex i il = [x | x <- il, fst x /= i]
+
  
 
 
