@@ -13,6 +13,7 @@ module Assignment2 where
     type IndexList = [(Int, (Char, Char))] -- one crib's letters and their positions
     type Menu = [Int]
     type Index = Int
+    type Indexes = [Index]
 
     data Enigma = SimpleEnigma Rotor Rotor Rotor Reflector Offsets | 
                  SteckeredEnigma Rotor Rotor Rotor Reflector Offsets Steckerboard
@@ -137,8 +138,23 @@ module Assignment2 where
     addElementToList :: a -> [a] -> [a]
     addElementToList e l = e:l
 
-    
+    -- given an index i and a crib, returns all possible links between i and other indexes
+    getPossibleMoves :: Index -> Crib -> Indexes
+    getPossibleMoves i crib = [ix | ix <- [0..k], getEncCharAt i il == getPlainCharAt ix il]
+     where k = length (fst crib)
+           il = makeIndexList crib
 
+    getEncCharAt :: Index -> IndexList -> Char
+    getEncCharAt _ [] = '\00'
+    getEncCharAt i (x:xs)
+     | i == fst x = snd (snd x)
+     | otherwise = getEncCharAt i xs
+
+    getPlainCharAt :: Index -> IndexList -> Char
+    getPlainCharAt _ [] = '\00'
+    getPlainCharAt i (x:xs)
+     | i == fst x = fst (snd x)
+     | otherwise = getPlainCharAt i xs
  
 
 
@@ -166,3 +182,5 @@ module Assignment2 where
 
     steckerboard2 = [(' ', ' ')]
     myList = [a | a <- [1, 2, 3, 4], a `elem` [1, 7, 8, 2]]
+    myCrib = ("WETTERVORHERSAGEBISKAYA", "RWIVTYRESXBFOGKUHQBAISE")
+    myIndexList = makeIndexList myCrib
