@@ -1,5 +1,6 @@
--- it is assumed that inputs for all the functions will be supplied correctly (i.e. Int as Int, Char as Char, etc.)
-
+-- !!!IMPORTANT!!!
+-- it is assumed that inputs for all the functions will be supplied correctly (i.e. Int as Int, Char as Char, etc., and all UPPERCASE)
+-- !!!
 module Assignment2 where
     import AssignmentHelp
     import Data.Char
@@ -12,7 +13,6 @@ module Assignment2 where
     type IndexList = [(Int, (Char, Char))] -- one crib's letters and their positions
     type Menu = [Int]
     type Index = Int
-    type Indexes = [Int]
 
     data Enigma = SimpleEnigma Rotor Rotor Rotor Reflector Offsets | 
                  SteckeredEnigma Rotor Rotor Rotor Reflector Offsets Steckerboard
@@ -68,6 +68,10 @@ module Assignment2 where
                     enigmaEncodeMessage ys (SteckeredEnigma lr mr rr reflector (olNew, omNew, orNew) steckerboard)
           where (olNew, omNew, orNew) = advanceRotors (ol, om, or)
 
+    -- to be implemented
+    longestMenu :: Crib -> Menu
+    longestMenu c = []
+
 
     -- encodes 1 character based on one rotor's configuration and its corresponding offset
     -- this method encapsulates the functionality of each rotor
@@ -82,7 +86,6 @@ module Assignment2 where
 
     -- after going through the reflector, the signal must go back through the rotors
     -- this is equivalent to encoding the letter backwards
-    --
     reverseEncode :: Char -> Rotor -> Int -> Char
     reverseEncode _ [] _ = '\00' --could have used Maybe Char as return type, but that meant altering code that works fine for not that much benefit
     reverseEncode c (x:xs) offset
@@ -111,11 +114,6 @@ module Assignment2 where
        else (ol, om + 1, 0)
       else (ol, om, or + 1)
 
-    --return a list of tuples containing all the letters in the specified crib and their corresponding positions in that crib (starting at 0)
-    -- makeIndexList :: Crib -> IndexList
-    -- makeIndexList (text, cipher) = zip [0..k] text
-    --  where k = length text
-
     -- --given an index and an IndexList, returns all menus starting at that index
     -- findMenusAt :: Index -> IndexList -> [Menu]
     -- findMenusAt i (x:xs)
@@ -127,30 +125,21 @@ module Assignment2 where
     --  | ((scnd (scnd x)) `elem` plain) = [buildMenusAt x idxlist | x <- filter (\f -> f /= i) (frst (x:xs)), idxlist <- filter (\f -> f /= i) (x:xs)]
      -- | otherwise = [[i]]
 
+    --return a list of tuples containing all the letters in the specified crib and their corresponding positions in that crib (starting at 0)
+    makeIndexList :: Crib -> IndexList
+    makeIndexList (plain, encoded) = zip [0..k] (zip plain encoded)
+     where k = length plain
 
     addXToEach :: Int -> [Menu] -> [Menu]
     addXToEach _ [] = []
-    addXToEach i (x:xs) = ((i:x) ++ (addXToEach i xs))
+    addXToEach i (x:xs) = (addElementToList i x):(addXToEach i xs)
 
-    -- longestMenu :: Crib -> Menu
-    -- longestMenu c =  
+    addElementToList :: a -> [a] -> [a]
+    addElementToList e l = e:l
 
-    myList = [a | a <- [1, 2, 3, 4], a `elem` [1, 7, 8, 2]]
+    
 
-    -- makeIndexes :: IndexList -> Indexes
-    -- makeIndexes = 
-
-    makeList :: Int -> [Int]
-    makeList a = [a, a]
-
-    funct :: Int -> [Int]
-    funct 2 = [3]
-
-    frst :: (a, b) -> a
-    frst (x, _) = x
-
-    scnd :: (a, b) -> b
-    scnd (_, x) = x
+ 
 
 
     -- returs the letter of the alphabet that corresponds to the currently visited character of a cipher
@@ -176,3 +165,4 @@ module Assignment2 where
                     -- ('T','W')]
 
     steckerboard2 = [(' ', ' ')]
+    myList = [a | a <- [1, 2, 3, 4], a `elem` [1, 7, 8, 2]]
